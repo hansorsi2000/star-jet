@@ -3,96 +3,104 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>苍穹星核：逐光者 T-01 典藏数值平衡完整版</title>
+<title>苍穹星核：逐光者 T-01 移动清爽平衡版</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
   body, html { width: 100%; height: 100%; overflow: hidden; background: #04060f; font-family: "Segoe UI", -apple-system, sans-serif; touch-action: none; overscroll-behavior: none; position: fixed; }
   canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: auto; }
   
-  #hud { position: fixed; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; pointer-events: none; z-index: 10; }
-  .stat-box { background: rgba(10, 14, 28, 0.88); border: 1px solid rgba(0, 210, 255, 0.5); padding: 9px 14px; border-radius: 12px; color: #fff; box-shadow: 0 4px 20px rgba(0, 210, 255, 0.2); backdrop-filter: blur(6px); min-width: 178px; pointer-events: auto; }
-  .stat-label { font-size: 11px; color: #7f9cf5; letter-spacing: 1px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; }
-  .rank-tag { background: linear-gradient(90deg, #f59e0b, #ec4899); color: #fff; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 900; }
-  #hearts-container { font-size: 16px; margin-top: 2px; letter-spacing: 2px; }
-  #combo-tag { font-size: 11.5px; color: #ffbd00; font-weight: bold; margin-top: 2px; }
-  #next-up-tag { font-size: 11px; color: #00ff9d; margin-top: 2px; font-weight: bold; }
-  .exp-bar-bg { width: 100%; height: 5px; background: rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden; margin-top: 4px; }
+  /* 顶部双栏 HUD：自适应紧凑布局，不挤占小屏幕 */
+  #hud { position: fixed; top: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; pointer-events: none; z-index: 10; }
+  .stat-box { background: rgba(10, 14, 28, 0.78); border: 1px solid rgba(0, 210, 255, 0.4); padding: 6px 10px; border-radius: 10px; color: #fff; box-shadow: 0 2px 12px rgba(0, 210, 255, 0.15); backdrop-filter: blur(5px); pointer-events: auto; }
+  .stat-left { flex: 1; max-width: 56vw; }
+  .stat-right { text-align: right; flex-shrink: 0; }
+  .stat-label { font-size: 10px; color: #7f9cf5; font-weight: bold; display: flex; align-items: center; justify-content: space-between; gap: 4px; white-space: nowrap; }
+  .rank-tag { background: linear-gradient(90deg, #f59e0b, #ec4899); color: #fff; padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 900; }
+  #hearts-container { font-size: 12px; margin-top: 2px; letter-spacing: 1px; line-height: 1.1; }
+  #score-val { font-size: 17px; font-weight: 900; color: #00e5ff; margin-top: 1px; line-height: 1.15; }
+  #combo-tag { font-size: 10px; color: #ffbd00; font-weight: bold; margin-top: 1px; white-space: nowrap; }
+  #next-up-tag { font-size: 9.5px; color: #00ff9d; margin-top: 1px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .exp-bar-bg { width: 100%; height: 4px; background: rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden; margin-top: 3px; }
   #exp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #00ff9d, #00e5ff); transition: width 0.15s; }
   
-  .hud-btn-row { display: flex; gap: 5px; justify-content: flex-end; margin-top: 5px; }
-  .hud-mini-btn { pointer-events: auto; cursor: pointer; padding: 3px 7px; border-radius: 6px; font-size: 10.5px; font-weight: bold; background: rgba(0, 229, 255, 0.15); border: 1px solid #00e5ff; color: #00e5ff; }
+  .hud-btn-row { display: flex; gap: 4px; justify-content: flex-end; margin-top: 4px; }
+  .hud-mini-btn { pointer-events: auto; cursor: pointer; padding: 2px 6px; border-radius: 5px; font-size: 9.5px; font-weight: bold; background: rgba(0, 229, 255, 0.15); border: 1px solid #00e5ff; color: #00e5ff; white-space: nowrap; }
   .hud-mini-btn:active { transform: scale(0.94); }
 
-  #boss-hud { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); width: min(460px, 74vw); background: rgba(16, 6, 22, 0.92); border: 2px solid #ff1e42; border-radius: 14px; padding: 8px 16px; text-align: center; z-index: 12; display: none; box-shadow: 0 0 28px rgba(255,30,66,0.65); pointer-events: none; }
-  #boss-name { font-size: 13px; font-weight: 900; color: #ff4d6d; letter-spacing: 2px; margin-bottom: 5px; text-shadow: 0 0 10px rgba(255,30,66,0.9); }
-  .boss-bar-bg { width: 100%; height: 10px; background: rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden; border: 1px solid rgba(255,30,66,0.5); }
-  #boss-hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #dc2626, #ff1e42, #ffbd00); box-shadow: 0 0 12px #ff1e42; transition: width 0.1s; }
-  #rush-timer-el { font-size: 11px; color: #00f0ff; font-weight: bold; margin-top: 4px; display: none; }
+  /* 技能角标栏：紧贴左栏下方，极简小标签 */
+  #perk-bar { position: fixed; top: 102px; left: 8px; right: 8px; display: flex; flex-wrap: wrap; gap: 4px; pointer-events: none; z-index: 9; max-height: 44px; overflow: hidden; }
+  .perk-badge { background: rgba(14, 20, 40, 0.82); border: 1px solid #00ff9d; border-radius: 6px; padding: 1.5px 6px; font-size: 9.5px; color: #fff; font-weight: bold; white-space: nowrap; }
+  .synergy-badge { background: linear-gradient(90deg, rgba(88,28,135,0.9), rgba(15,23,42,0.9)); border: 1px solid #e879f9; border-radius: 6px; padding: 1.5px 6px; font-size: 9.5px; color: #f0abfc; font-weight: 900; white-space: nowrap; }
+  .curse-badge { background: rgba(69, 10, 10, 0.88); border: 1px solid #ff1e42; border-radius: 6px; padding: 1.5px 6px; font-size: 9.5px; color: #fca5a5; font-weight: bold; white-space: nowrap; }
+  .buff-badge { background: rgba(45, 12, 65, 0.88); border: 1px solid #ffbd00; border-radius: 6px; padding: 1.5px 6px; font-size: 9.5px; color: #ffbd00; font-weight: bold; white-space: nowrap; }
 
-  #perk-bar { position: fixed; top: 138px; left: 12px; display: flex; flex-wrap: wrap; gap: 5px; pointer-events: none; z-index: 10; max-width: 74vw; }
-  .perk-badge { background: rgba(14, 20, 40, 0.9); border: 1px solid #00ff9d; border-radius: 8px; padding: 3px 8px; font-size: 11.5px; color: #fff; font-weight: bold; box-shadow: 0 0 10px rgba(0,255,157,0.25); }
-  .synergy-badge { background: linear-gradient(90deg, rgba(88,28,135,0.95), rgba(15,23,42,0.95)); border: 1px solid #e879f9; border-radius: 8px; padding: 3px 9px; font-size: 11.5px; color: #f0abfc; font-weight: 900; box-shadow: 0 0 15px rgba(232,121,249,0.5); }
-  .curse-badge { background: rgba(69, 10, 10, 0.92); border: 1px solid #ff1e42; border-radius: 8px; padding: 3px 8px; font-size: 11.5px; color: #fca5a5; font-weight: bold; box-shadow: 0 0 12px rgba(255,30,66,0.45); }
-  .buff-badge { background: rgba(45, 12, 65, 0.92); border: 1px solid #ffbd00; border-radius: 8px; padding: 3px 8px; font-size: 11.5px; color: #ffbd00; font-weight: bold; box-shadow: 0 0 12px rgba(255,189,0,0.4); }
+  /* Boss 血条：位于顶部 HUD 下方，彻底避开左右状态栏 */
+  #boss-hud { position: fixed; top: 126px; left: 50%; transform: translateX(-50%); width: min(420px, 88vw); background: rgba(16, 6, 22, 0.88); border: 1.5px solid #ff1e42; border-radius: 10px; padding: 5px 12px; text-align: center; z-index: 12; display: none; box-shadow: 0 0 20px rgba(255,30,66,0.5); pointer-events: none; }
+  #boss-name { font-size: 11px; font-weight: 900; color: #ff4d6d; letter-spacing: 1px; margin-bottom: 4px; text-shadow: 0 0 8px rgba(255,30,66,0.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .boss-bar-bg { width: 100%; height: 7px; background: rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden; border: 1px solid rgba(255,30,66,0.5); }
+  #boss-hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #dc2626, #ff1e42, #ffbd00); box-shadow: 0 0 10px #ff1e42; transition: width 0.1s; }
+  #rush-timer-el { font-size: 10px; color: #00f0ff; font-weight: bold; margin-top: 3px; display: none; }
 
-  #ai-comm { position: fixed; top: 82px; left: 50%; transform: translateX(-50%); width: min(440px, 86vw); background: rgba(8, 18, 38, 0.92); border: 1px solid #00f0ff; border-left: 4px solid #e879f9; border-radius: 10px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; z-index: 11; pointer-events: none; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.25); transition: opacity 0.25s; opacity: 0; }
+  /* AI 副官播报栏：移至底部技能栏上方，绝不遮挡顶部战斗视野与按钮 */
+  #ai-comm { position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%); width: min(400px, 92vw); background: rgba(8, 18, 38, 0.86); border: 1px solid #00f0ff; border-left: 3px solid #e879f9; border-radius: 8px; padding: 5px 10px; display: flex; align-items: center; gap: 8px; z-index: 11; pointer-events: none; box-shadow: 0 4px 14px rgba(0, 240, 255, 0.2); transition: opacity 0.25s; opacity: 0; }
   #ai-comm.show { opacity: 1; }
-  .ai-avatar { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #00f0ff, #9333ea); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; color: #fff; box-shadow: 0 0 10px #00f0ff; flex-shrink: 0; }
-  .ai-text-wrap { text-align: left; flex: 1; }
-  .ai-title { font-size: 10px; color: #00f0ff; font-weight: 900; letter-spacing: 1px; }
-  #ai-msg { font-size: 12px; color: #e2e8f0; line-height: 1.35; margin-top: 1px; }
+  .ai-avatar { width: 24px; height: 24px; border-radius: 6px; background: linear-gradient(135deg, #00f0ff, #9333ea); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: #fff; flex-shrink: 0; }
+  .ai-text-wrap { text-align: left; flex: 1; overflow: hidden; }
+  .ai-title { font-size: 8.5px; color: #00f0ff; font-weight: 900; letter-spacing: 0.5px; }
+  #ai-msg { font-size: 10.5px; color: #e2e8f0; line-height: 1.25; margin-top: 1px; }
 
-  #bottom-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 350px; max-width: 94vw; z-index: 10; text-align: center; pointer-events: none; }
-  .action-btn-row { display: flex; justify-content: center; gap: 8px; pointer-events: auto; }
-  .bar-wrap { width: 100%; height: 9px; background: rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden; margin-top: 5px; border: 1px solid rgba(255,255,255,0.25); }
-  #emp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #00e5ff, #8a2be2, #ff007a); box-shadow: 0 0 12px #ff007a; }
-  #emp-btn, #dash-btn, #railgun-btn { display: inline-block; padding: 6px 11px; border-radius: 99px; font-size: 11.5px; font-weight: bold; color: #9aa8c7; background: rgba(12, 16, 32, 0.9); border: 1px solid #3b486b; cursor: pointer; pointer-events: auto; transition: 0.15s; }
-  #emp-btn.ready { color: #fff; background: linear-gradient(90deg, #00c6ff, #7928ca, #ff007a); border-color: #fff; box-shadow: 0 0 18px rgba(0, 198, 255, 0.85); }
-  #dash-btn.ready { color: #fff; background: linear-gradient(90deg, #0ea5e9, #6366f1); border-color: #00f0ff; box-shadow: 0 0 14px rgba(0, 240, 255, 0.65); }
-  #railgun-btn.ready { color: #fff; background: linear-gradient(90deg, #d946ef, #8b5cf6); border-color: #e879f9; box-shadow: 0 0 18px rgba(217, 70, 239, 0.85); }
+  /* 底部技能控制栏：强制单行不换行，紧凑对齐 */
+  #bottom-bar { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); width: min(380px, 95vw); z-index: 10; text-align: center; pointer-events: none; }
+  .action-btn-row { display: flex; justify-content: space-between; gap: 6px; pointer-events: auto; }
+  .bar-wrap { width: 100%; height: 6px; background: rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden; margin-top: 5px; border: 1px solid rgba(255,255,255,0.25); }
+  #emp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #00e5ff, #8a2be2, #ff007a); box-shadow: 0 0 10px #ff007a; }
+  #emp-btn, #dash-btn, #railgun-btn { flex: 1; padding: 6px 4px; border-radius: 99px; font-size: 11px; font-weight: bold; color: #9aa8c7; background: rgba(12, 16, 32, 0.9); border: 1px solid #3b486b; cursor: pointer; pointer-events: auto; transition: 0.15s; white-space: nowrap; text-align: center; }
+  #emp-btn.ready { color: #fff; background: linear-gradient(90deg, #00c6ff, #7928ca, #ff007a); border-color: #fff; box-shadow: 0 0 14px rgba(0, 198, 255, 0.8); }
+  #dash-btn.ready { color: #fff; background: linear-gradient(90deg, #0ea5e9, #6366f1); border-color: #00f0ff; box-shadow: 0 0 12px rgba(0, 240, 255, 0.6); }
+  #railgun-btn.ready { color: #fff; background: linear-gradient(90deg, #d946ef, #8b5cf6); border-color: #e879f9; box-shadow: 0 0 14px rgba(217, 70, 239, 0.8); }
 
   .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: rgba(4, 6, 15, 0.86); z-index: 99999; backdrop-filter: blur(8px); pointer-events: auto; }
   .hidden { display: none !important; }
-  .panel { width: 480px; max-width: 94vw; max-height: 92vh; overflow-y: auto; background: linear-gradient(145deg, #11172e, #0a0d1c); border: 1px solid rgba(0, 229, 255, 0.5); border-radius: 18px; padding: 20px 18px; text-align: center; color: #fff; box-shadow: 0 0 50px rgba(0, 229, 255, 0.25); pointer-events: auto; }
-  .title { font-size: 23px; font-weight: 900; background: linear-gradient(90deg, #00f0ff, #e879f9, #ffbd00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; }
-  .subtitle { font-size: 12px; color: #9baec8; margin-bottom: 12px; }
-  .rules { text-align: left; background: rgba(6, 8, 18, 0.8); border-radius: 12px; padding: 11px 13px; font-size: 11.5px; color: #ced9e8; line-height: 1.62; margin-bottom: 12px; border: 1px solid rgba(0, 229, 255, 0.15); }
-  .btn-row { display: flex; gap: 10px; margin-top: 8px; }
-  .btn-main { flex: 1; padding: 13px 0; border: none; border-radius: 12px; background: linear-gradient(90deg, #00e5ff, #3b82f6, #a855f7); color: #fff; font-size: 15px; font-weight: 900; cursor: pointer; box-shadow: 0 0 24px rgba(59, 130, 246, 0.5); pointer-events: auto; }
-  .btn-sub { flex: 1; padding: 12px 0; border: 1px solid #00f0ff; border-radius: 12px; background: rgba(14, 24, 52, 0.9); color: #00f0ff; font-size: 14px; font-weight: 900; cursor: pointer; pointer-events: auto; }
+  .panel { width: 460px; max-width: 92vw; max-height: 90vh; overflow-y: auto; background: linear-gradient(145deg, #11172e, #0a0d1c); border: 1px solid rgba(0, 229, 255, 0.5); border-radius: 16px; padding: 16px 14px; text-align: center; color: #fff; box-shadow: 0 0 40px rgba(0, 229, 255, 0.25); pointer-events: auto; }
+  .title { font-size: 20px; font-weight: 900; background: linear-gradient(90deg, #00f0ff, #e879f9, #ffbd00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+  .subtitle { font-size: 11.5px; color: #9baec8; margin-bottom: 10px; }
+  .rules { text-align: left; background: rgba(6, 8, 18, 0.8); border-radius: 10px; padding: 10px 12px; font-size: 11px; color: #ced9e8; line-height: 1.55; margin-bottom: 10px; border: 1px solid rgba(0, 229, 255, 0.15); }
+  .btn-row { display: flex; gap: 8px; margin-top: 6px; }
+  .btn-main { flex: 1; padding: 11px 0; border: none; border-radius: 10px; background: linear-gradient(90deg, #00e5ff, #3b82f6, #a855f7); color: #fff; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); pointer-events: auto; }
+  .btn-sub { flex: 1; padding: 10px 0; border: 1px solid #00f0ff; border-radius: 10px; background: rgba(14, 24, 52, 0.9); color: #00f0ff; font-size: 13px; font-weight: 900; cursor: pointer; pointer-events: auto; }
   .btn-main:active, .btn-sub:active { transform: scale(0.97); }
 
-  .card-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; max-height: 52vh; overflow-y: auto; padding-right: 4px; }
-  .up-card { display: flex; align-items: center; gap: 11px; text-align: left; background: rgba(22, 30, 60, 0.9); border: 1px solid rgba(0, 229, 255, 0.35); border-radius: 12px; padding: 10px; cursor: pointer; transition: 0.15s; }
-  .up-card:hover, .up-card:active { border-color: #00ff9d; background: rgba(32, 44, 86, 0.95); transform: translateY(-2px); }
-  .up-icon { font-size: 25px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(0,229,255,0.12); border-radius: 10px; pointer-events: none; flex-shrink: 0; }
+  .card-list { display: flex; flex-direction: column; gap: 7px; margin-top: 6px; max-height: 52vh; overflow-y: auto; padding-right: 2px; }
+  .up-card { display: flex; align-items: center; gap: 10px; text-align: left; background: rgba(22, 30, 60, 0.9); border: 1px solid rgba(0, 229, 255, 0.35); border-radius: 10px; padding: 9px; cursor: pointer; transition: 0.15s; }
+  .up-card:hover, .up-card:active { border-color: #00ff9d; background: rgba(32, 44, 86, 0.95); transform: translateY(-1px); }
+  .up-icon { font-size: 22px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(0,229,255,0.12); border-radius: 8px; pointer-events: none; flex-shrink: 0; }
   .up-info { flex: 1; pointer-events: none; }
-  .up-name { font-size: 13.5px; font-weight: bold; color: #00ff9d; margin-bottom: 2px; display: flex; justify-content: space-between; }
-  .up-desc { font-size: 11.5px; color: #b8c7dc; line-height: 1.35; }
-  .ultimate-card { border-color: #ff007a !important; background: linear-gradient(135deg, rgba(50,15,40,0.9), rgba(20,25,50,0.9)) !important; box-shadow: 0 0 20px rgba(255,0,122,0.4); }
+  .up-name { font-size: 12.5px; font-weight: bold; color: #00ff9d; margin-bottom: 2px; display: flex; justify-content: space-between; }
+  .up-desc { font-size: 11px; color: #b8c7dc; line-height: 1.3; }
+  .ultimate-card { border-color: #ff007a !important; background: linear-gradient(135deg, rgba(50,15,40,0.9), rgba(20,25,50,0.9)) !important; box-shadow: 0 0 16px rgba(255,0,122,0.4); }
   .ultimate-card .up-name { color: #ff007a !important; }
-  .curse-card { border-color: #ef4444 !important; background: linear-gradient(135deg, rgba(69,10,10,0.95), rgba(25,10,25,0.95)) !important; box-shadow: 0 0 18px rgba(239,68,68,0.45); }
+  .curse-card { border-color: #ef4444 !important; background: linear-gradient(135deg, rgba(69,10,10,0.95), rgba(25,10,25,0.95)) !important; box-shadow: 0 0 16px rgba(239,68,68,0.45); }
   .curse-card .up-name { color: #f87171 !important; }
 
-  .hangar-currency { background: rgba(255, 189, 0, 0.12); border: 1px solid #ffbd00; border-radius: 10px; padding: 6px 14px; font-size: 14px; font-weight: 900; color: #ffbd00; margin-bottom: 8px; display: inline-block; }
-  .skin-grid, .chip-grid, .ach-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; margin-bottom: 8px; }
-  .skin-card, .chip-card, .ach-card { background: rgba(14, 22, 46, 0.9); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 10px; padding: 7px; text-align: left; cursor: pointer; transition: 0.15s; }
-  .skin-card.active { border: 2px solid #00ff9d; background: rgba(16, 48, 56, 0.9); box-shadow: 0 0 14px rgba(0,255,157,0.35); }
+  .hangar-currency { background: rgba(255, 189, 0, 0.12); border: 1px solid #ffbd00; border-radius: 8px; padding: 5px 12px; font-size: 13px; font-weight: 900; color: #ffbd00; margin-bottom: 6px; display: inline-block; }
+  .skin-grid, .chip-grid, .ach-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 6px; }
+  .skin-card, .chip-card, .ach-card { background: rgba(14, 22, 46, 0.9); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 8px; padding: 6px; text-align: left; cursor: pointer; transition: 0.15s; }
+  .skin-card.active { border: 2px solid #00ff9d; background: rgba(16, 48, 56, 0.9); }
   .skin-card.locked, .ach-card.locked { opacity: 0.5; border-color: #475569; }
-  .chip-card.equipped { border: 2px solid #e879f9; background: rgba(45, 12, 65, 0.9); box-shadow: 0 0 14px rgba(232,121,249,0.4); }
+  .chip-card.equipped { border: 2px solid #e879f9; background: rgba(45, 12, 65, 0.9); }
   .ach-card.unlocked { border: 1px solid #ffbd00; background: rgba(45, 32, 10, 0.85); }
-  .skin-title, .chip-name { font-size: 11.5px; font-weight: 900; color: #fff; display: flex; justify-content: space-between; }
-  .skin-desc, .chip-desc { font-size: 10px; color: #cbd5e1; margin-top: 2px; line-height: 1.3; }
+  .skin-title, .chip-name { font-size: 11px; font-weight: 900; color: #fff; display: flex; justify-content: space-between; }
+  .skin-desc, .chip-desc { font-size: 9.5px; color: #cbd5e1; margin-top: 2px; line-height: 1.25; }
 
-  .codex-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; margin-bottom: 10px; }
-  .codex-item { background: rgba(12, 18, 38, 0.9); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 10px; padding: 6px 4px; text-align: center; }
-  .codex-item img { width: 56px; height: 44px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(232,121,249,0.5)); }
-  .codex-title { font-size: 10.5px; font-weight: bold; color: #f0abfc; margin-top: 2px; }
-  .codex-kills { font-size: 9.5px; color: #94a3b8; margin-top: 1px; }
+  .codex-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 4px; margin-bottom: 8px; }
+  .codex-item { background: rgba(12, 18, 38, 0.9); border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 8px; padding: 5px 3px; text-align: center; }
+  .codex-item img { width: 48px; height: 38px; object-fit: contain; filter: drop-shadow(0 0 4px rgba(232,121,249,0.5)); }
+  .codex-title { font-size: 10px; font-weight: bold; color: #f0abfc; margin-top: 2px; }
+  .codex-kills { font-size: 9px; color: #94a3b8; margin-top: 1px; }
 
-  .dps-row { margin-bottom: 8px; text-align: left; }
-  .dps-label { font-size: 12px; color: #e2e8f0; display: flex; justify-content: space-between; margin-bottom: 3px; font-weight: bold; }
-  .dps-bar-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 99px; overflow: hidden; }
+  .dps-row { margin-bottom: 7px; text-align: left; }
+  .dps-label { font-size: 11px; color: #e2e8f0; display: flex; justify-content: space-between; margin-bottom: 2px; font-weight: bold; }
+  .dps-bar-bg { width: 100%; height: 7px; background: rgba(255,255,255,0.1); border-radius: 99px; overflow: hidden; }
   .dps-bar-fill { height: 100%; border-radius: 99px; transition: width 0.2s; }
 </style>
 </head>
@@ -100,50 +108,50 @@
 
 <canvas id="game"></canvas>
 
-<div id="boss-hud">
-  <div id="boss-name">⚠️ 警告：传奇首领降临 ⚠️</div>
-  <div class="boss-bar-bg"><div id="boss-hp-fill"></div></div>
-  <div id="rush-timer-el">⏱️ Boss Rush 竞速用时: 0.0s</div>
-</div>
-
-<div id="ai-comm">
-  <div class="ai-avatar">AI</div>
-  <div class="ai-text-wrap">
-    <div class="ai-title">ORION-7 TACTICAL AI // 逐光者战术副官</div>
-    <div id="ai-msg">全息火控系统自检完毕，随时准备迎敌。</div>
-  </div>
-</div>
-
 <div id="hud">
-  <div class="stat-box">
+  <div class="stat-box stat-left">
     <div class="stat-label">
       <span id="ship-model-label">ORION T-01</span>
       <span class="rank-tag" id="rank-badge">见习飞行员</span>
     </div>
     <div id="hearts-container">❤️❤️❤️</div>
-    <div style="font-size: 20px; font-weight: 900; color: #00e5ff; margin-top:2px;" id="score-val">0</div>
+    <div id="score-val">0</div>
     <div id="combo-tag">连击倍率 x1</div>
-    <div id="next-up-tag">Lv.1 | 下次进化还需: 700</div>
+    <div id="next-up-tag">Lv.1 | 需: 1000</div>
     <div class="exp-bar-bg"><div id="exp-fill"></div></div>
   </div>
-  <div class="stat-box" style="text-align: right; min-width: 145px;">
+  <div class="stat-box stat-right">
     <div class="stat-label" style="justify-content: flex-end;">BEST:&nbsp;<span id="best-val" style="color:#ff2a85;">0</span></div>
-    <div style="font-size:13.5px; font-weight:900; color:#ffbd00; margin-top:2px;">💎 星晶: <span id="crystal-hud">0</span></div>
-    <div id="shield-tag" style="font-size:11.5px;color:#00e5ff;margin-top:2px;font-weight:bold;">护盾: 在线</div>
+    <div style="font-size:12px; font-weight:900; color:#ffbd00; margin-top:2px;">💎 星晶: <span id="crystal-hud">0</span></div>
+    <div id="shield-tag" style="font-size:10.5px;color:#00e5ff;margin-top:2px;font-weight:bold;">护盾: 在线</div>
     <div class="hud-btn-row">
       <div class="hud-mini-btn" id="bgm-btn" onclick="window.toggleBGM()">🎵 电音</div>
-      <div class="hud-mini-btn" id="pause-btn-el" onclick="window.togglePause()">⏸️ 暂停/DPS</div>
+      <div class="hud-mini-btn" id="pause-btn-el" onclick="window.togglePause()">⏸️ 暂停</div>
     </div>
   </div>
 </div>
 
 <div id="perk-bar"></div>
 
+<div id="boss-hud">
+  <div id="boss-name">⚠️ 警告：传奇首领降临 ⚠️</div>
+  <div class="boss-bar-bg"><div id="boss-hp-fill"></div></div>
+  <div id="rush-timer-el">⏱️ Boss Rush 竞速: 0.0s</div>
+</div>
+
+<div id="ai-comm">
+  <div class="ai-avatar">AI</div>
+  <div class="ai-text-wrap">
+    <div class="ai-title">ORION-7 TACTICAL AI // 战术副官</div>
+    <div id="ai-msg">全息火控系统自检完毕，随时准备迎敌。</div>
+  </div>
+</div>
+
 <div id="bottom-bar">
   <div class="action-btn-row">
-    <div id="dash-btn" class="ready" onclick="window.triggerDash()">⚡ 闪现 (Shift)</div>
-    <div id="railgun-btn" onclick="window.triggerRailgun()">🌟 歼星炮 (R)</div>
-    <div id="emp-btn" onclick="window.triggerEMP()">💥 脉冲 (Space)</div>
+    <div id="dash-btn" class="ready" onclick="window.triggerDash()">⚡ 闪现</div>
+    <div id="railgun-btn" onclick="window.triggerRailgun()">🌟 歼星炮(1/16)</div>
+    <div id="emp-btn" onclick="window.triggerEMP()">💥 脉冲(40%)</div>
   </div>
   <div class="bar-wrap"><div id="emp-fill"></div></div>
 </div>
@@ -162,7 +170,7 @@
   <div class="panel">
     <div class="title">⏸️ 战术暂停 & 实时火控 DPS</div>
     <div class="subtitle">当前各武器模组累计输出伤害与占比分析</div>
-    <div class="rules" id="dps-container" style="padding: 12px;"></div>
+    <div class="rules" id="dps-container" style="padding: 10px;"></div>
     <div class="btn-row">
       <button class="btn-sub" onclick="window.quitToMenu()">🏠 返航主菜单</button>
       <button class="btn-main" onclick="window.togglePause()">▶️ 继续战斗</button>
@@ -172,7 +180,7 @@
 
 <!-- 战役凯旋与无尽深渊入口 -->
 <div id="victory-modal" class="modal-bg hidden">
-  <div class="panel" style="border-color:#ffbd00; box-shadow: 0 0 60px rgba(255,189,0,0.4);">
+  <div class="panel" style="border-color:#ffbd00; box-shadow: 0 0 50px rgba(255,189,0,0.4);">
     <div class="title">🏆 星域远征大捷 · 传奇凯旋</div>
     <div class="subtitle">恭贺王牌飞行员！三大星域级首领已被你悉数讨伐！</div>
     <div class="hangar-currency">🎁 凯旋嘉奖：💎 +50 星晶已入库！</div>
@@ -186,23 +194,23 @@
 
 <!-- 机库、涂装、3孔芯片、图鉴与成就奖杯墙 -->
 <div id="hangar-modal" class="modal-bg hidden">
-  <div class="panel" style="max-height: 94vh;">
+  <div class="panel">
     <div class="title">🛠️ 逐光者机库 · 芯片与荣誉墙</div>
     <div class="hangar-currency">💎 机库储备星晶：<span id="hangar-crystals">0</span></div>
 
-    <div style="font-size:11.5px; font-weight:bold; color:#00f0ff; margin-bottom:4px; text-align:left;">✈️ 出击战机子型号（击败对应首领免费解锁）：</div>
+    <div style="font-size:11px; font-weight:bold; color:#00f0ff; margin-bottom:4px; text-align:left;">✈️ 出击战机子型号（击败对应首领免费解锁）：</div>
     <div class="skin-grid" id="skin-container"></div>
 
-    <div style="font-size:11.5px; font-weight:bold; color:#e879f9; margin-top:4px; margin-bottom:4px; text-align:left;">🧩 方案十八：星核战术芯片槽（可同时装载 3 枚）：</div>
+    <div style="font-size:11px; font-weight:bold; color:#e879f9; margin-top:4px; margin-bottom:4px; text-align:left;">🧩 星核战术芯片槽（可同时装载 3 枚）：</div>
     <div class="chip-grid" id="chip-container"></div>
 
-    <div style="font-size:11.5px; font-weight:bold; color:#00ff9d; margin-top:4px; text-align:left;">⚙️ 机库永久科技改装：</div>
-    <div class="card-list" id="hangar-list" style="max-height: 20vh;"></div>
+    <div style="font-size:11px; font-weight:bold; color:#00ff9d; margin-top:4px; text-align:left;">⚙️ 机库永久科技改装：</div>
+    <div class="card-list" id="hangar-list" style="max-height: 18vh;"></div>
 
-    <div style="font-size:11.5px; font-weight:bold; color:#ffbd00; margin-top:8px; margin-bottom:4px; text-align:left;">🏅 方案十九：王牌飞行员荣誉成就奖杯墙：</div>
+    <div style="font-size:11px; font-weight:bold; color:#ffbd00; margin-top:6px; margin-bottom:4px; text-align:left;">🏅 王牌飞行员荣誉成就奖杯墙：</div>
     <div class="ach-grid" id="ach-container"></div>
 
-    <div style="font-size:11.5px; font-weight:bold; color:#e879f9; margin-top:6px; text-align:left;">🌌 星域级首领讨伐全息图鉴：</div>
+    <div style="font-size:11px; font-weight:bold; color:#e879f9; margin-top:6px; text-align:left;">🌌 星域级首领讨伐全息图鉴：</div>
     <div class="codex-grid">
       <div class="codex-item">
         <img id="codex-img-0" alt="深渊之眼">
@@ -220,20 +228,20 @@
         <div class="codex-kills" id="codex-kill-2">讨伐: 0 次</div>
       </div>
     </div>
-    <button class="btn-main" style="width:100%; margin-top:6px;" onclick="window.closeHangar()">返回星际舰桥</button>
+    <button class="btn-main" style="width:100%; margin-top:4px;" onclick="window.closeHangar()">返回星际舰桥</button>
   </div>
 </div>
 
 <!-- 主界面弹窗 -->
 <div id="overlay" class="modal-bg">
   <div class="panel">
-    <div class="title" id="modal-title">苍穹星核 · 十九方案平衡终极版</div>
-    <div class="subtitle" id="modal-sub">已实装三大首领硬核强化、指数平滑升级曲线与移动端优化！</div>
+    <div class="title" id="modal-title">苍穹星核 · 移动清爽终极版</div>
+    <div class="subtitle" id="modal-sub">已实装手机清爽 UI 布局、升级经验翻倍（25万封顶）与硬核首领！</div>
     <div class="rules">
-      <div>⚔️ <b>首领战硬核重制</b>：三大首领血量提升至 18,000 ~ 38,000，弹幕射速与密度全面升级！</div>
-      <div>📈 <b>平滑成长曲线</b>：升级所需积分按 1.22 倍指数递增，彻底告别后期频繁弹窗打断节奏！</div>
-      <div>🌟 <b>天基歼星主炮 + 黑市商船</b>：连击满 x16 轰出全屏螺旋死光并召唤幻影分身，星海偶遇黑市商船！</div>
-      <div>🧩 <b>3孔战术芯片 + 移动端防遮挡</b>：手机触控自动上方偏移 45px，附带物理马达震动反馈！</div>
+      <div>📱 <b>移动端清爽 UI</b>：全面瘦身状态框，AI 副官移至底部，彻底告别手机小屏重叠挤压！</div>
+      <div>📈 <b>硬核翻倍经验曲线</b>：初始升级需 1,000 分，每升一级严格翻一倍，最高 250,000 分封顶！</div>
+      <div>⚔️ <b>三大史诗首领强化</b>：首领血量 18,000 ~ 38,000，高密度环形弹幕压迫感拉满！</div>
+      <div>🌟 <b>天基歼星主炮 + 黑市商船</b>：连击满 x16 轰出全屏螺旋死光，星海偶遇黑市商船！</div>
     </div>
     <div class="btn-row">
       <button class="btn-sub" id="hangar-open-el" onclick="window.openHangar()">🛠️ 机库/芯片/成就</button>
@@ -305,7 +313,7 @@
     if (!aiMsgEl || !aiCommEl) return;
     aiMsgEl.textContent = text;
     aiCommEl.classList.add('show');
-    aiTimer = 210;
+    aiTimer = 190;
   }
 
   // ============================================================================
@@ -730,8 +738,8 @@
 
   var playerLevel = 1;
   var prevUpgradeScore = 0;
-  var upgradeStepCost = 700;
-  var nextUpgradeScore = 700;
+  var upgradeStepCost = 1000;
+  var nextUpgradeScore = 1000;
 
   var currentBoss = null;
   var bossStages = [25000, 50000, 80000];
@@ -937,8 +945,8 @@
     grazeCountThisRun = 0;
     playerLevel = 1;
     prevUpgradeScore = 0;
-    upgradeStepCost = 700;
-    nextUpgradeScore = 700;
+    upgradeStepCost = 1000;
+    nextUpgradeScore = 1000;
     killCountForNuke = 0;
     currentBossIndex = 0;
     currentBoss = null;
@@ -1012,7 +1020,7 @@
     updateUI();
     running = true;
     playSound('coin');
-    triggerAIComm(SHIP_SKINS[skinId].name + ' 已升空，按 Shift 量子闪现，连击满 x16 可发射天基歼星炮！');
+    triggerAIComm(SHIP_SKINS[skinId].name + ' 已升空，连击满 x16 可发射天基歼星炮！');
   };
 
   window.startBossRush = function() {
@@ -1020,8 +1028,8 @@
     isBossRushMode = true;
     bossRushFrames = 0;
     rushTimerEl.style.display = 'block';
-    score = 9500;
-    bossStages = [9500, 13000, 17500];
+    score = 31000;
+    bossStages = [31000, 38000, 46000];
     triggerAIComm('【Boss Rush 巅峰竞速模式】已启动！请先完成 5 次神装自选，随后三大首领将无缝连战！');
     checkAndTriggerUpgrade();
   };
@@ -1076,7 +1084,7 @@
 
   var CURSED_POOL = [
     { id: 'curse_blood', icon: '🩸', name: '【深渊契约】过载血契', desc: '扣除 1 颗红心上限（最低保留1心），全武器伤害直接 ×1.8 倍！', apply: function() { if (player.maxHp > 1) { player.maxHp--; player.hp = Math.min(player.hp, player.maxHp); } player.dmgMult *= 1.8; player.curses.push('🩸过载血契'); } },
-    { id: 'curse_glass', icon: '🔥', name: '【深渊契约】玻璃大炮', desc: '永久卸除能量护罩，主炮与僚机射速狂飙 +75%！', apply: function() { player.shield = false; player.shieldDisabled = true; shieldEl.textContent = '护盾: 契约卸除'; shieldEl.style.color = '#ef4444'; player.fireRateMult *= 0.55; player.curses.push('🔥玻璃大炮'); } },
+    { id: 'curse_glass', icon: '🔥', name: '【深渊契约】玻璃大炮', desc: '永久卸除能量护罩，主炮与僚机射速狂飙 +75%！', apply: function() { player.shield = false; player.shieldDisabled = true; shieldEl.textContent = '护盾: 卸除'; shieldEl.style.color = '#ef4444'; player.fireRateMult *= 0.55; player.curses.push('🔥玻璃大炮'); } },
     { id: 'curse_greed', icon: '🧲', name: '【深渊契约】贪婪黑洞', desc: '敌舰推进速度 +15%，本局积分与星晶获取直接 ×2.2 倍！', apply: function() { player.enemySpdCurse *= 1.15; player.scoreBonus *= 2.2; player.curses.push('🧲贪婪黑洞'); } }
   ];
 
@@ -1108,19 +1116,19 @@
     perkBarEl.innerHTML = '';
     var gunBadge = document.createElement('div');
     gunBadge.className = 'perk-badge';
-    gunBadge.textContent = player.ultimateGun ? '🌟 歼星矩阵' : ('🔥 激光炮 Lv.' + player.gunLevel);
+    gunBadge.textContent = player.ultimateGun ? '🌟歼星矩阵' : ('🔥激光Lv.' + player.gunLevel);
     perkBarEl.appendChild(gunBadge);
 
     if (player.wingmanLevel > 0) {
-      var wmBadge = document.createElement('div'); wmBadge.className = 'perk-badge'; wmBadge.textContent = '🛸 量子僚机 Lv.' + player.wingmanLevel; perkBarEl.appendChild(wmBadge);
+      var wmBadge = document.createElement('div'); wmBadge.className = 'perk-badge'; wmBadge.textContent = '🛸僚机Lv.' + player.wingmanLevel; perkBarEl.appendChild(wmBadge);
     }
-    if (player.ultimateBlade) { var b1 = document.createElement('div'); b1.className = 'perk-badge'; b1.textContent = '🌟 太虚剑网'; perkBarEl.appendChild(b1); }
-    if (player.ultimateZap) { var b2 = document.createElement('div'); b2.className = 'perk-badge'; b2.textContent = '🌟 审判雷暴'; perkBarEl.appendChild(b2); }
-    if (player.ultimateNuke) { var b3 = document.createElement('div'); b3.className = 'perk-badge'; b3.textContent = '🌟 反物质黑洞'; perkBarEl.appendChild(b3); }
+    if (player.ultimateBlade) { var b1 = document.createElement('div'); b1.className = 'perk-badge'; b1.textContent = '🌟太虚剑网'; perkBarEl.appendChild(b1); }
+    if (player.ultimateZap) { var b2 = document.createElement('div'); b2.className = 'perk-badge'; b2.textContent = '🌟审判雷暴'; perkBarEl.appendChild(b2); }
+    if (player.ultimateNuke) { var b3 = document.createElement('div'); b3.className = 'perk-badge'; b3.textContent = '🌟反物质黑洞'; perkBarEl.appendChild(b3); }
 
-    if (hasTwinBeamSynergy()) { var syn1 = document.createElement('div'); syn1.className = 'synergy-badge'; syn1.textContent = '🧬 共鸣：猎户座同调死光'; perkBarEl.appendChild(syn1); }
-    if (hasStormWebSynergy()) { var syn2 = document.createElement('div'); syn2.className = 'synergy-badge'; syn2.textContent = '🧬 共鸣：电磁风暴剑阵'; perkBarEl.appendChild(syn2); }
-    if (hasZeroTimeSynergy()) { var syn3 = document.createElement('div'); syn3.className = 'synergy-badge'; syn3.textContent = '🧬 共鸣：奇点时停领域'; perkBarEl.appendChild(syn3); }
+    if (hasTwinBeamSynergy()) { var syn1 = document.createElement('div'); syn1.className = 'synergy-badge'; syn1.textContent = '🧬同调死光'; perkBarEl.appendChild(syn1); }
+    if (hasStormWebSynergy()) { var syn2 = document.createElement('div'); syn2.className = 'synergy-badge'; syn2.textContent = '🧬风暴剑阵'; perkBarEl.appendChild(syn2); }
+    if (hasZeroTimeSynergy()) { var syn3 = document.createElement('div'); syn3.className = 'synergy-badge'; syn3.textContent = '🧬奇点时停'; perkBarEl.appendChild(syn3); }
 
     for (var cIdx = 0; cIdx < player.curses.length; cIdx++) {
       var cBadge = document.createElement('div'); cBadge.className = 'curse-badge'; cBadge.textContent = player.curses[cIdx]; perkBarEl.appendChild(cBadge);
@@ -1130,11 +1138,11 @@
       if (u.id === 'gun' || u.id === 'wingman' || u.id === 'shield_up' || u.id === 'blade' || u.id === 'zap' || u.id === 'nuke') continue;
       var lvl = perkLevels[u.id] || 0;
       if (lvl > 0) {
-        var badge = document.createElement('div'); badge.className = 'perk-badge'; badge.textContent = u.icon + ' Lv.' + lvl; perkBarEl.appendChild(badge);
+        var badge = document.createElement('div'); badge.className = 'perk-badge'; badge.textContent = u.icon + 'Lv.' + lvl; perkBarEl.appendChild(badge);
       }
     }
-    if (player.overdriveTimer > 0) { var bf1 = document.createElement('div'); bf1.className = 'buff-badge'; bf1.textContent = '⚡ 狂暴超载中'; perkBarEl.appendChild(bf1); }
-    if (player.hyperMagnetTimer > 0) { var bf2 = document.createElement('div'); bf2.className = 'buff-badge'; bf2.textContent = '🧲 全屏磁吸中'; perkBarEl.appendChild(bf2); }
+    if (player.overdriveTimer > 0) { var bf1 = document.createElement('div'); bf1.className = 'buff-badge'; bf1.textContent = '⚡超载'; perkBarEl.appendChild(bf1); }
+    if (player.hyperMagnetTimer > 0) { var bf2 = document.createElement('div'); bf2.className = 'buff-badge'; bf2.textContent = '🧲磁吸'; perkBarEl.appendChild(bf2); }
   }
 
   function updateHeartsDisplay() {
@@ -1146,13 +1154,14 @@
   }
 
   // ============================================================================
-  // 数值平衡重构：升级平滑成长曲线
+  // 数值平衡重构：每升一级所需经验严格翻一倍，最高 250,000（25万）封顶
   // ============================================================================
   function completeUpgradeSelection(msg, color) {
     var prevSyn1 = hasTwinBeamSynergy(), prevSyn2 = hasStormWebSynergy(), prevSyn3 = hasZeroTimeSynergy();
     playerLevel++;
     prevUpgradeScore = nextUpgradeScore;
-    upgradeStepCost = Math.round(700 * Math.pow(1.22, playerLevel - 1));
+    // 每升一级经验翻一倍（1000 -> 2000 -> 4000 -> 8000...），封顶 250,000
+    upgradeStepCost = Math.min(250000, Math.round(1000 * Math.pow(2, playerLevel - 1)));
     nextUpgradeScore = prevUpgradeScore + upgradeStepCost;
 
     player.invincible = Math.max(player.invincible, 75);
@@ -1225,7 +1234,7 @@
   }
 
   // ============================================================================
-  // 数值平衡重构：首领血量提升 3~4 倍并强化高危弹幕射速
+  // 首领血量提升 3~4 倍并强化高危弹幕射速
   // ============================================================================
   function spawnBoss() {
     enemies = []; rushWarnings = []; bossHazards = []; meteors = []; blackMarketShip = null;
@@ -1236,11 +1245,11 @@
     var endlessScale = currentBossIndex >= 3 ? (1 + (currentBossIndex - 2) * 0.45) : 1.0;
     var baseHps = [18000, 26000, 38000];
     var bossHp = Math.round(baseHps[bossType] * (1 + (playerLevel - 1) * 0.35) * endlessScale);
-    var dW = bossType === 0 ? 340 : (bossType === 1 ? 300 : 350);
-    var dH = bossType === 0 ? 235 : (bossType === 1 ? 300 : 275);
+    var dW = bossType === 0 ? 310 : (bossType === 1 ? 280 : 320);
+    var dH = bossType === 0 ? 215 : (bossType === 1 ? 280 : 250);
 
     currentBoss = {
-      x: W / 2, y: -160, targetY: 160, vx: 1.5, vy: 2.2, r: 102, drawW: dW, drawH: dH,
+      x: W / 2, y: -160, targetY: 215, vx: 1.5, vy: 2.2, r: 95, drawW: dW, drawH: dH,
       hp: bossHp, maxHp: bossHp, type: bossType, enraged: false, attackTimer: 0, phase: 1, hitFlash: 0
     };
 
@@ -1257,21 +1266,21 @@
 
     bossHud.style.display = 'block';
     if (bossType === 1) {
-      bossHud.style.borderColor = '#d946ef'; bossHud.style.boxShadow = '0 0 30px rgba(217, 70, 239, 0.7)';
-      bossNameEl.style.color = '#f0abfc'; bossNameEl.style.textShadow = '0 0 12px rgba(217, 70, 239, 0.95)';
-      bossHpFill.style.background = 'linear-gradient(90deg, #7e22ce, #d946ef, #38bdf8)'; bossHpFill.style.boxShadow = '0 0 12px #d946ef';
+      bossHud.style.borderColor = '#d946ef'; bossHud.style.boxShadow = '0 0 24px rgba(217, 70, 239, 0.7)';
+      bossNameEl.style.color = '#f0abfc'; bossNameEl.style.textShadow = '0 0 10px rgba(217, 70, 239, 0.95)';
+      bossHpFill.style.background = 'linear-gradient(90deg, #7e22ce, #d946ef, #38bdf8)'; bossHpFill.style.boxShadow = '0 0 10px #d946ef';
     } else if (bossType === 2) {
-      bossHud.style.borderColor = '#a855f7'; bossHud.style.boxShadow = '0 0 32px rgba(168, 85, 247, 0.8)';
-      bossNameEl.style.color = '#e9d5ff'; bossNameEl.style.textShadow = '0 0 14px rgba(192, 132, 252, 1)';
-      bossHpFill.style.background = 'linear-gradient(90deg, #3b0764, #a855f7, #f472b6)'; bossHpFill.style.boxShadow = '0 0 14px #a855f7';
+      bossHud.style.borderColor = '#a855f7'; bossHud.style.boxShadow = '0 0 26px rgba(168, 85, 247, 0.8)';
+      bossNameEl.style.color = '#e9d5ff'; bossNameEl.style.textShadow = '0 0 12px rgba(192, 132, 252, 1)';
+      bossHpFill.style.background = 'linear-gradient(90deg, #3b0764, #a855f7, #f472b6)'; bossHpFill.style.boxShadow = '0 0 12px #a855f7';
     } else {
-      bossHud.style.borderColor = '#ff1e42'; bossHud.style.boxShadow = '0 0 28px rgba(255, 30, 66, 0.65)';
-      bossNameEl.style.color = '#ff4d6d'; bossNameEl.style.textShadow = '0 0 10px rgba(255, 30, 66, 0.9)';
-      bossHpFill.style.background = 'linear-gradient(90deg, #dc2626, #ff1e42, #ffbd00)'; bossHpFill.style.boxShadow = '0 0 12px #ff1e42';
+      bossHud.style.borderColor = '#ff1e42'; bossHud.style.boxShadow = '0 0 22px rgba(255, 30, 66, 0.65)';
+      bossNameEl.style.color = '#ff4d6d'; bossNameEl.style.textShadow = '0 0 8px rgba(255, 30, 66, 0.9)';
+      bossHpFill.style.background = 'linear-gradient(90deg, #dc2626, #ff1e42, #ffbd00)'; bossHpFill.style.boxShadow = '0 0 10px #ff1e42';
     }
 
-    var prefix = currentBossIndex >= 3 ? '[无尽轮回] ' : '';
-    bossNameEl.textContent = prefix + bossNames[bossType] + ' (HP: ' + bossHp + ')';
+    var prefix = currentBossIndex >= 3 ? '[无尽] ' : '';
+    bossNameEl.textContent = prefix + bossNames[bossType] + ' (' + bossHp + ')';
     bossHpFill.style.width = '100%';
   }
 
@@ -1296,9 +1305,9 @@
 
   function spawnBlackMarketShip() {
     if (currentBoss || blackMarketShip) return;
-    triggerAIComm('🛸【赛博黑市商船】已驶入星域！飞入左圈消耗10星晶直升武器，飞入右圈免费赌博超频！');
+    triggerAIComm('🛸【赛博黑市商船】驶入！飞入左圈10星晶升武器，飞入右圈免费超频！');
     blackMarketShip = {
-      x: W / 2, y: -60, targetY: 135, timer: 520,
+      x: W / 2, y: -60, targetY: 185, timer: 520,
       leftUsed: false, rightUsed: false
     };
   }
@@ -1320,7 +1329,7 @@
     triggerAIComm('侦测到敌方【黄金星晶运输舰】横穿星域，全速将其拦截！');
     var fromLeft = Math.random() < 0.5;
     var gx = fromLeft ? -45 : W + 45;
-    var gy = 140 + Math.random() * 120;
+    var gy = 175 + Math.random() * 110;
     var gHp = Math.round(180 * (1 + (playerLevel - 1) * 0.25));
     goldConvoys.push({ x: gx, y: gy, vx: fromLeft ? 2.1 : -2.1, vy: 0.15, r: 28, hp: gHp, maxHp: gHp, pulse: 0 });
   }
@@ -1369,12 +1378,12 @@
       player.shield = false; player.invincible = 80; combo = 1; playSound('hit');
       player.shieldRegenTimer = 0;
       shieldEl.textContent = '护盾: 破损'; shieldEl.style.color = '#ff2a6d';
-      addFloatText(player.x, player.y - 24, '🛡️ 能量护罩抵挡: ' + reasonText, '#00f0ff');
+      addFloatText(player.x, player.y - 24, '🛡️ 护罩抵挡: ' + reasonText, '#00f0ff');
       if (player.shieldRegenMax > 0) triggerAIComm('全息护罩受损，机库纳米自充能系统已启动修复程序！');
       updateUI();
     } else {
       player.hp--; updateHeartsDisplay(); player.invincible = 115; combo = 1; playSound('hit');
-      addFloatText(player.x, player.y - 26, '❤️ 生命红心 -1 (' + reasonText + ')', '#ff0055');
+      addFloatText(player.x, player.y - 26, '❤️ 生命 -1 (' + reasonText + ')', '#ff0055');
       if (player.hp === 1) triggerAIComm('警告！逐光者装甲濒临解体，请善用⚡量子闪现规避致命弹幕！');
       updateUI();
       if (player.hp <= 0) gameOver();
@@ -1386,7 +1395,7 @@
     if (score >= 80000) unlockAchievement('score_80k');
     comboEl.textContent = '连击倍率 x' + combo;
     var remain = Math.max(0, nextUpgradeScore - Math.floor(score));
-    nextUpEl.textContent = 'Lv.' + playerLevel + ' | 下次进化还需: ' + remain;
+    nextUpEl.textContent = 'Lv.' + playerLevel + ' | 需: ' + remain;
 
     var currentLevelProgress = Math.max(0, Math.min(100, ((score - prevUpgradeScore) / upgradeStepCost) * 100));
     expFillEl.style.width = currentLevelProgress + '%';
@@ -1394,21 +1403,21 @@
     var neededEmp = getEmpCost();
     empFillEl.style.width = empCharge + '%';
     if (empCharge >= neededEmp) {
-      empBtn.textContent = '💥 释放脉冲 (就绪)'; empBtn.className = 'ready';
+      empBtn.textContent = '💥 脉冲(就绪)'; empBtn.className = 'ready';
     } else {
-      empBtn.textContent = '💥 脉冲 (' + Math.floor(empCharge) + '/' + neededEmp + '%)'; empBtn.className = '';
+      empBtn.textContent = '💥 脉冲(' + Math.floor(empCharge) + '%)'; empBtn.className = '';
     }
 
     if (player.dashCooldown <= 0) {
-      dashBtn.textContent = '⚡ 闪现 (就绪)'; dashBtn.className = 'ready';
+      dashBtn.textContent = '⚡ 闪现(就绪)'; dashBtn.className = 'ready';
     } else {
-      dashBtn.textContent = '⚡ 闪现 (' + (player.dashCooldown / 60).toFixed(1) + 's)'; dashBtn.className = '';
+      dashBtn.textContent = '⚡ 闪现(' + (player.dashCooldown / 60).toFixed(1) + 's)'; dashBtn.className = '';
     }
 
     if (combo >= 16) {
-      railgunBtn.textContent = '🌟 歼星炮 (就绪)'; railgunBtn.className = 'ready';
+      railgunBtn.textContent = '🌟 歼星炮(就绪)'; railgunBtn.className = 'ready';
     } else {
-      railgunBtn.textContent = '🌟 歼星炮 (' + combo + '/16)'; railgunBtn.className = '';
+      railgunBtn.textContent = '🌟 歼星炮(' + combo + '/16)'; railgunBtn.className = '';
     }
   }
 
@@ -1468,7 +1477,7 @@
 
       if (isBossRushMode) {
         bossRushFrames++;
-        if (bossRushFrames % 6 === 0) rushTimerEl.textContent = '⏱️ Boss Rush 竞速用时: ' + (bossRushFrames / 60).toFixed(1) + 's';
+        if (bossRushFrames % 6 === 0) rushTimerEl.textContent = '⏱️ Boss Rush 竞速: ' + (bossRushFrames / 60).toFixed(1) + 's';
       }
 
       updateProceduralBGM();
@@ -1498,13 +1507,13 @@
       if (!player.shield && !player.shieldDisabled && player.shieldRegenMax > 0) {
         player.shieldRegenTimer++;
         var regenPct = Math.min(99, Math.floor((player.shieldRegenTimer / player.shieldRegenMax) * 100));
-        shieldEl.textContent = '护盾修复: ' + regenPct + '%';
+        shieldEl.textContent = '修复: ' + regenPct + '%';
         shieldEl.style.color = '#ffbd00';
         if (player.shieldRegenTimer >= player.shieldRegenMax) {
           player.shield = true; player.shieldRegenTimer = 0;
           playSound('levelup');
           shieldEl.textContent = '护盾: 在线'; shieldEl.style.color = '#00e5ff';
-          addFloatText(player.x, player.y - 30, '🛡️ 纳米自充能完毕：全息护罩重启！', '#00f0ff');
+          addFloatText(player.x, player.y - 30, '🛡️ 全息护罩重启！', '#00f0ff');
         }
       }
 
@@ -1566,49 +1575,49 @@
         var bmX = blackMarketShip.x, bmY = blackMarketShip.y;
         ctx.save();
         ctx.translate(bmX, bmY);
-        ctx.shadowBlur = 18; ctx.shadowColor = '#00ff9d';
-        ctx.fillStyle = '#0f172a'; ctx.strokeStyle = '#00ff9d'; ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.roundRect(-75, -24, 150, 48, 12); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#00ff9d'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText('🛸 赛博黑市商船 (' + Math.ceil(blackMarketShip.timer / 60) + 's)', 0, 4);
+        ctx.shadowBlur = 14; ctx.shadowColor = '#00ff9d';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)'; ctx.strokeStyle = '#00ff9d'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.roundRect(-68, -18, 136, 36, 10); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#00ff9d'; ctx.font = 'bold 11.5px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('🛸 黑市商船 (' + Math.ceil(blackMarketShip.timer / 60) + 's)', 0, 4);
         ctx.restore();
 
         if (!blackMarketShip.leftUsed) {
-          var lx = bmX - 75, ly = bmY + 75;
+          var lx = bmX - 68, ly = bmY + 62;
           ctx.save();
           ctx.strokeStyle = '#ffbd00'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
-          ctx.beginPath(); ctx.arc(lx, ly, 34, 0, Math.PI * 2); ctx.stroke();
-          ctx.fillStyle = '#ffbd00'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
-          ctx.fillText('💎10 升武器', lx, ly + 4);
+          ctx.beginPath(); ctx.arc(lx, ly, 30, 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle = '#ffbd00'; ctx.font = 'bold 10.5px sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText('💎10升武', lx, ly + 4);
           ctx.restore();
-          if (Math.hypot(player.x - lx, player.y - ly) < player.r + 32) {
+          if (Math.hypot(player.x - lx, player.y - ly) < player.r + 30) {
             blackMarketShip.leftUsed = true;
             if (saveData.crystals >= 10) {
               saveData.crystals -= 10; writeSaveData();
               player.gunLevel = Math.min(5, player.gunLevel + 1);
               player.wingmanLevel = Math.min(4, player.wingmanLevel + 1);
               playSound('levelup'); renderPerkBadges();
-              addFloatText(player.x, player.y - 30, '🛸 黑市交易成功：主炮&僚机等级+1！', '#00ff9d');
+              addFloatText(player.x, player.y - 30, '🛸 黑市升级：主炮&僚机+1！', '#00ff9d');
             } else {
               addFloatText(player.x, player.y - 30, '⚠️ 星晶不足 10 颗！', '#ff1e42');
             }
           }
         }
         if (!blackMarketShip.rightUsed) {
-          var rx = bmX + 75, ry = bmY + 75;
+          var rx = bmX + 68, ry = bmY + 62;
           ctx.save();
           ctx.strokeStyle = '#e879f9'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
-          ctx.beginPath(); ctx.arc(rx, ry, 34, 0, Math.PI * 2); ctx.stroke();
-          ctx.fillStyle = '#e879f9'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+          ctx.beginPath(); ctx.arc(rx, ry, 30, 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle = '#e879f9'; ctx.font = 'bold 10.5px sans-serif'; ctx.textAlign = 'center';
           ctx.fillText('⚡免费超频', rx, ry + 4);
           ctx.restore();
-          if (Math.hypot(player.x - rx, player.y - ry) < player.r + 32) {
+          if (Math.hypot(player.x - rx, player.y - ry) < player.r + 30) {
             blackMarketShip.rightUsed = true;
             playSound('levelup');
             player.overdriveTimer = 540;
             if (player.hp < player.maxHp) { player.hp++; updateHeartsDisplay(); }
             renderPerkBadges();
-            addFloatText(player.x, player.y - 30, '⚡ 黑市超频：恢复1心 + 9秒狂暴射速！', '#e879f9');
+            addFloatText(player.x, player.y - 30, '⚡ 超频：+1心 & 9秒狂暴！', '#e879f9');
           }
         }
 
@@ -1818,7 +1827,7 @@
           var gBonus = Math.round(500 * player.scoreBonus);
           score += gBonus; saveData.crystals += 8; writeSaveData();
           for (var go = 0; go < 6; go++) spawnOrb(ship.x + (Math.random() - 0.5) * 55, ship.y + (Math.random() - 0.5) * 55);
-          addFloatText(ship.x, ship.y, '💰 击落黄金运输舰 +' + gBonus + ' (💎+8)', '#ffbd00');
+          addFloatText(ship.x, ship.y, '💰 击落运输舰 +' + gBonus + ' (💎+8)', '#ffbd00');
           goldConvoys.splice(gc, 1); updateUI(); checkAndTriggerUpgrade(); continue;
         }
 
@@ -1841,8 +1850,8 @@
         ctx.lineWidth = 2.5; ctx.setLineDash([14, 10]);
         ctx.beginPath(); ctx.moveTo(warn.x, 0); ctx.lineTo(warn.x, H); ctx.stroke();
         ctx.setLineDash([]);
-        ctx.fillStyle = '#ff1e42'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText('⚠️ 高速拦截机俯冲', warn.x, 85);
+        ctx.fillStyle = '#ff1e42'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('⚠️ 俯冲预警', warn.x, 145);
         ctx.restore();
 
         if (warn.timer <= 0) {
@@ -1879,13 +1888,13 @@
           playSound('levelup');
           spawnParticle(crate.x, crate.y, '#00ff9d', 22, 5);
           if (crate.type === 'overdrive') {
-            player.overdriveTimer = 480; addFloatText(crate.x, crate.y, '📦 空投激活：狂暴双倍攻速 8秒！', '#ffbd00');
+            player.overdriveTimer = 480; addFloatText(crate.x, crate.y, '📦 空投：双倍射速 8秒！', '#ffbd00');
           } else if (crate.type === 'magnet') {
             player.hyperMagnetTimer = 600; for (var mOrb = 0; mOrb < 5; mOrb++) spawnOrb();
-            addFloatText(crate.x, crate.y, '📦 空投激活：全屏星晶磁吸 10秒！', '#00f0ff');
+            addFloatText(crate.x, crate.y, '📦 空投：全屏磁吸 10秒！', '#00f0ff');
           } else {
             if (!player.shieldDisabled) { player.shield = true; player.shieldRegenTimer = 0; shieldEl.textContent = '护盾: 在线'; shieldEl.style.color = '#00e5ff'; }
-            player.invincible = 360; addFloatText(crate.x, crate.y, '📦 空投激活：绝对无敌力场 6秒！', '#00ff9d');
+            player.invincible = 360; addFloatText(crate.x, crate.y, '📦 空投：无敌力场 6秒！', '#00ff9d');
           }
           renderPerkBadges();
           supplyCrates.splice(scIdx, 1);
@@ -1910,7 +1919,7 @@
           currentBoss.y += currentBoss.vy;
         } else {
           currentBoss.x += currentBoss.vx * (freezeTimer > 0 ? 0 : 1);
-          var marginX = Math.min(150, W * 0.25);
+          var marginX = Math.min(130, W * 0.24);
           if (currentBoss.x < marginX || currentBoss.x > W - marginX) currentBoss.vx *= -1;
         }
 
@@ -1939,16 +1948,16 @@
 
         if (currentBoss.attackTimer % 220 === 140 && freezeTimer <= 0) {
           if (bType === 0) {
-            var offsets = currentBoss.enraged ? [-105, 0, 105] : [0];
+            var offsets = currentBoss.enraged ? [-95, 0, 95] : [0];
             for (var boIdx = 0; boIdx < offsets.length; boIdx++) {
               bossHazards.push({ kind: 'abyss_beam', offsetX: offsets[boIdx], x: currentBoss.x + offsets[boIdx], y: currentBoss.y, warnTimer: 70, fireTimer: 45 });
             }
           } else if (bType === 1) {
             for (var sn = 0; sn < (currentBoss.enraged ? 4 : 2); sn++) {
-              bossHazards.push({ kind: 'supernova_zone', x: 70 + Math.random() * Math.max(80, W - 140), y: Math.max(260, H * 0.42 + Math.random() * (H * 0.44)), r: 78, warnTimer: 85 });
+              bossHazards.push({ kind: 'supernova_zone', x: 60 + Math.random() * Math.max(70, W - 120), y: Math.max(280, H * 0.45 + Math.random() * (H * 0.4)), r: 72, warnTimer: 85 });
             }
           } else if (bType === 2) {
-            bossHazards.push({ kind: 'black_hole', x: W / 2 + (Math.random() - 0.5) * 140, y: H * 0.55, r: 48, lifeTimer: 220, moving: currentBoss.enraged });
+            bossHazards.push({ kind: 'black_hole', x: W / 2 + (Math.random() - 0.5) * 120, y: H * 0.56, r: 46, lifeTimer: 220, moving: currentBoss.enraged });
           }
         }
 
@@ -1966,7 +1975,7 @@
             bullets.splice(bb, 1);
             playSound('bulletHit');
             spawnParticle(bBlt.x, bBlt.y, bulletColor, 4, 3);
-            addFloatText(currentBoss.x + (Math.random() - 0.5) * 50, currentBoss.y - 30, '-' + bDmg, '#ff4d6d');
+            addFloatText(currentBoss.x + (Math.random() - 0.5) * 50, currentBoss.y - 25, '-' + bDmg, '#ff4d6d');
             bossHpFill.style.width = Math.max(0, (currentBoss.hp / currentBoss.maxHp) * 100) + '%';
 
             if (currentBoss.hp <= 0) {
@@ -1991,7 +2000,7 @@
 
               if (currentBossIndex === 3 && !endlessMode) triggerCampaignVictory();
               else {
-                triggerAIComm('首领已被彻底歼灭！正在启动【超时空跃迁】进入下一星域，装甲紧急修复 +1 ❤️！');
+                triggerAIComm('首领已被彻底歼灭！正在启动【超时空跃迁】进入下一星域，装甲修复 +1 ❤️！');
                 checkAndTriggerUpgrade();
               }
               break;
@@ -2007,7 +2016,7 @@
           ctx.shadowBlur = currentBoss.hitFlash > 0 ? 45 : 22;
           ctx.shadowColor = currentBoss.hitFlash > 0 ? '#ffffff' : bulletColor;
           var activeBossImg = bossImgs[currentBoss.type];
-          var bW = Math.min(currentBoss.drawW, W * 0.9);
+          var bW = Math.min(currentBoss.drawW, W * 0.85);
           var bH = bW * (currentBoss.drawH / currentBoss.drawW);
           if (activeBossImg && activeBossImg.complete) ctx.drawImage(activeBossImg, -bW / 2, -bH / 2, bW, bH);
           ctx.restore();
@@ -2027,10 +2036,10 @@
           } else if (hObj.fireTimer > 0) {
             hObj.fireTimer--;
             ctx.save(); ctx.shadowBlur = 30; ctx.shadowColor = '#ff1e42';
-            ctx.fillStyle = 'rgba(255, 30, 66, 0.45)'; ctx.fillRect(hObj.x - 26, hObj.y, 52, H - hObj.y);
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(hObj.x - 9, hObj.y, 18, H - hObj.y);
+            ctx.fillStyle = 'rgba(255, 30, 66, 0.45)'; ctx.fillRect(hObj.x - 24, hObj.y, 48, H - hObj.y);
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(hObj.x - 8, hObj.y, 16, H - hObj.y);
             ctx.restore();
-            if (Math.abs(player.x - hObj.x) < 26 + player.r && player.y > hObj.y && player.invincible <= 0) hurtPlayer('深渊聚焦死光');
+            if (Math.abs(player.x - hObj.x) < 24 + player.r && player.y > hObj.y && player.invincible <= 0) hurtPlayer('深渊聚焦死光');
           } else bossHazards.splice(hz, 1);
         } else if (hObj.kind === 'supernova_zone') {
           hObj.warnTimer--;
@@ -2082,7 +2091,7 @@
           score += gScore; empCharge = Math.min(100, empCharge + 6 * player.chargeRate);
           if ((saveData.equippedChips || []).includes('phantom')) player.dashCooldown = 0;
           spawnParticle(bBullet.x, bBullet.y, '#00f0ff', 5, 2.5);
-          addFloatText(player.x, player.y - 34, '✨极限擦弹 +' + gScore, '#00f0ff');
+          addFloatText(player.x, player.y - 34, '✨擦弹 +' + gScore, '#00f0ff');
           updateUI();
         }
       }
@@ -2262,7 +2271,7 @@
 
       ctx.shadowBlur = 18; ctx.shadowColor = activeSkin.color;
       if (player.invincible % 6 <= 3 && playerJetImg.complete) {
-        ctx.drawImage(playerJetImg, -47, -50, 94, 100);
+        ctx.drawImage(playerJetImg, -44, -47, 88, 94);
       }
       ctx.restore();
 
@@ -2270,18 +2279,18 @@
         ctx.save();
         ctx.translate(player.x, player.y);
         ctx.rotate(frameCount * 0.025);
-        ctx.strokeStyle = activeSkin.color; ctx.lineWidth = 2.5; ctx.shadowBlur = 12; ctx.shadowColor = activeSkin.color;
-        ctx.setLineDash([16, 10]);
-        ctx.beginPath(); ctx.arc(0, 0, player.r + 32, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = activeSkin.color; ctx.lineWidth = 2.2; ctx.shadowBlur = 10; ctx.shadowColor = activeSkin.color;
+        ctx.setLineDash([14, 9]);
+        ctx.beginPath(); ctx.arc(0, 0, player.r + 28, 0, Math.PI * 2); ctx.stroke();
         ctx.restore();
       }
 
       if (bossWarningBanner > 0) {
         bossWarningBanner--;
         ctx.save();
-        ctx.fillStyle = 'rgba(120, 0, 30, 0.85)'; ctx.fillRect(0, H * 0.36 - 28, W, 56);
-        ctx.fillStyle = '#ffffff'; ctx.font = '900 15px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(bossWarningText, W / 2, H * 0.36);
+        ctx.fillStyle = 'rgba(120, 0, 30, 0.85)'; ctx.fillRect(0, H * 0.38 - 22, W, 44);
+        ctx.fillStyle = '#ffffff'; ctx.font = '900 13px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(bossWarningText, W / 2, H * 0.38);
         ctx.restore();
       }
     }
@@ -2304,7 +2313,7 @@
     for (var f = floatTexts.length - 1; f >= 0; f--) {
       var ft = floatTexts[f]; ft.y += ft.vy; ft.alpha -= 0.028;
       if (ft.alpha <= 0) { floatTexts.splice(f, 1); continue; }
-      ctx.save(); ctx.fillStyle = ft.color; ctx.globalAlpha = ft.alpha; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(ft.text, ft.x, ft.y); ctx.restore();
+      ctx.save(); ctx.fillStyle = ft.color; ctx.globalAlpha = ft.alpha; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(ft.text, ft.x, ft.y); ctx.restore();
     }
 
     ctx.restore();
