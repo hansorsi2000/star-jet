@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>苍穹星核：逐光者 T-01 移动清爽平衡版</title>
+<title>苍穹星核：逐光者 T-01 终极耐玩触控版</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
   body, html { width: 100%; height: 100%; overflow: hidden; background: #04060f; font-family: "Segoe UI", -apple-system, sans-serif; touch-action: none; overscroll-behavior: none; position: fixed; }
   canvas { display: block; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; pointer-events: auto; }
   
   /* 顶部双栏 HUD：自适应紧凑布局，不挤占小屏幕 */
-  #hud { position: fixed; top: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; pointer-events: none; z-index: 10; }
+  #hud { position: fixed; top: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; pointer-events: none; z-index: 20; }
   .stat-box { background: rgba(10, 14, 28, 0.78); border: 1px solid rgba(0, 210, 255, 0.4); padding: 6px 10px; border-radius: 10px; color: #fff; box-shadow: 0 2px 12px rgba(0, 210, 255, 0.15); backdrop-filter: blur(5px); pointer-events: auto; }
   .stat-left { flex: 1; max-width: 56vw; }
   .stat-right { text-align: right; flex-shrink: 0; }
@@ -24,8 +24,8 @@
   #exp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #00ff9d, #00e5ff); transition: width 0.15s; }
   
   .hud-btn-row { display: flex; gap: 4px; justify-content: flex-end; margin-top: 4px; }
-  .hud-mini-btn { pointer-events: auto; cursor: pointer; padding: 2px 6px; border-radius: 5px; font-size: 9.5px; font-weight: bold; background: rgba(0, 229, 255, 0.15); border: 1px solid #00e5ff; color: #00e5ff; white-space: nowrap; }
-  .hud-mini-btn:active { transform: scale(0.94); }
+  .hud-mini-btn { pointer-events: auto; cursor: pointer; padding: 3px 7px; border-radius: 5px; font-size: 9.5px; font-weight: bold; background: rgba(0, 229, 255, 0.15); border: 1px solid #00e5ff; color: #00e5ff; white-space: nowrap; touch-action: manipulation; }
+  .hud-mini-btn:active { transform: scale(0.92); }
 
   /* 技能角标栏：紧贴左栏下方，极简小标签 */
   #perk-bar { position: fixed; top: 102px; left: 8px; right: 8px; display: flex; flex-wrap: wrap; gap: 4px; pointer-events: none; z-index: 9; max-height: 44px; overflow: hidden; }
@@ -41,23 +41,24 @@
   #boss-hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #dc2626, #ff1e42, #ffbd00); box-shadow: 0 0 10px #ff1e42; transition: width 0.1s; }
   #rush-timer-el { font-size: 10px; color: #00f0ff; font-weight: bold; margin-top: 3px; display: none; }
 
-  /* AI 副官播报栏：移至底部技能栏上方，绝不遮挡顶部战斗视野与按钮 */
-  #ai-comm { position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%); width: min(400px, 92vw); background: rgba(8, 18, 38, 0.86); border: 1px solid #00f0ff; border-left: 3px solid #e879f9; border-radius: 8px; padding: 5px 10px; display: flex; align-items: center; gap: 8px; z-index: 11; pointer-events: none; box-shadow: 0 4px 14px rgba(0, 240, 255, 0.2); transition: opacity 0.25s; opacity: 0; }
+  /* AI 副官播报栏：稳居屏幕最底部中央，完全不挡任何操作区 */
+  #ai-comm { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); width: min(380px, 90vw); background: rgba(8, 18, 38, 0.86); border: 1px solid #00f0ff; border-left: 3px solid #e879f9; border-radius: 8px; padding: 5px 10px; display: flex; align-items: center; gap: 8px; z-index: 11; pointer-events: none; box-shadow: 0 4px 14px rgba(0, 240, 255, 0.2); transition: opacity 0.25s; opacity: 0; }
   #ai-comm.show { opacity: 1; }
   .ai-avatar { width: 24px; height: 24px; border-radius: 6px; background: linear-gradient(135deg, #00f0ff, #9333ea); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: #fff; flex-shrink: 0; }
   .ai-text-wrap { text-align: left; flex: 1; overflow: hidden; }
   .ai-title { font-size: 8.5px; color: #00f0ff; font-weight: 900; letter-spacing: 0.5px; }
   #ai-msg { font-size: 10.5px; color: #e2e8f0; line-height: 1.25; margin-top: 1px; }
 
-  /* 底部技能控制栏：强制单行不换行，紧凑对齐 */
-  #bottom-bar { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); width: min(380px, 95vw); z-index: 10; text-align: center; pointer-events: none; }
-  .action-btn-row { display: flex; justify-content: space-between; gap: 6px; pointer-events: auto; }
-  .bar-wrap { width: 100%; height: 6px; background: rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden; margin-top: 5px; border: 1px solid rgba(255,255,255,0.25); }
+  /* 右侧拇指黄金热区：竖向大圆钮阵列，好按且彻底隔离误触 */
+  #bottom-bar { position: fixed; right: 12px; bottom: 18vh; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 25; pointer-events: none; }
+  .action-btn-row { display: flex; flex-direction: column; gap: 11px; pointer-events: auto; }
+  .bar-wrap { width: 56px; height: 6px; background: rgba(255,255,255,0.15); border-radius: 99px; overflow: hidden; border: 1px solid rgba(255,255,255,0.3); }
   #emp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #00e5ff, #8a2be2, #ff007a); box-shadow: 0 0 10px #ff007a; }
-  #emp-btn, #dash-btn, #railgun-btn { flex: 1; padding: 6px 4px; border-radius: 99px; font-size: 11px; font-weight: bold; color: #9aa8c7; background: rgba(12, 16, 32, 0.9); border: 1px solid #3b486b; cursor: pointer; pointer-events: auto; transition: 0.15s; white-space: nowrap; text-align: center; }
-  #emp-btn.ready { color: #fff; background: linear-gradient(90deg, #00c6ff, #7928ca, #ff007a); border-color: #fff; box-shadow: 0 0 14px rgba(0, 198, 255, 0.8); }
-  #dash-btn.ready { color: #fff; background: linear-gradient(90deg, #0ea5e9, #6366f1); border-color: #00f0ff; box-shadow: 0 0 12px rgba(0, 240, 255, 0.6); }
-  #railgun-btn.ready { color: #fff; background: linear-gradient(90deg, #d946ef, #8b5cf6); border-color: #e879f9; box-shadow: 0 0 14px rgba(217, 70, 239, 0.8); }
+  #emp-btn, #dash-btn, #railgun-btn { width: 56px; height: 56px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10.5px; line-height: 1.15; font-weight: 900; color: #9aa8c7; background: rgba(12, 16, 32, 0.88); border: 2px solid #3b486b; cursor: pointer; pointer-events: auto; transition: transform 0.1s; text-align: center; box-shadow: 0 4px 14px rgba(0,0,0,0.55); touch-action: manipulation; }
+  #emp-btn:active, #dash-btn:active, #railgun-btn:active { transform: scale(0.88); }
+  #emp-btn.ready { color: #fff; background: linear-gradient(135deg, #00c6ff, #7928ca, #ff007a); border-color: #fff; box-shadow: 0 0 16px rgba(0, 198, 255, 0.85); }
+  #dash-btn.ready { color: #fff; background: linear-gradient(135deg, #0ea5e9, #6366f1); border-color: #00f0ff; box-shadow: 0 0 14px rgba(0, 240, 255, 0.65); }
+  #railgun-btn.ready { color: #fff; background: linear-gradient(135deg, #d946ef, #8b5cf6); border-color: #e879f9; box-shadow: 0 0 16px rgba(217, 70, 239, 0.85); }
 
   .modal-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: rgba(4, 6, 15, 0.86); z-index: 99999; backdrop-filter: blur(8px); pointer-events: auto; }
   .hidden { display: none !important; }
@@ -147,11 +148,12 @@
   </div>
 </div>
 
+<!-- 右侧拇指悬浮圆钮阵列 -->
 <div id="bottom-bar">
   <div class="action-btn-row">
-    <div id="dash-btn" class="ready" onclick="window.triggerDash()">⚡ 闪现</div>
-    <div id="railgun-btn" onclick="window.triggerRailgun()">🌟 歼星炮(1/16)</div>
-    <div id="emp-btn" onclick="window.triggerEMP()">💥 脉冲(40%)</div>
+    <div id="dash-btn" class="ready" onclick="window.triggerDash()">⚡闪现<br>就绪</div>
+    <div id="railgun-btn" onclick="window.triggerRailgun()">🌟歼星<br>1/16</div>
+    <div id="emp-btn" onclick="window.triggerEMP()">💥脉冲<br>40%</div>
   </div>
   <div class="bar-wrap"><div id="emp-fill"></div></div>
 </div>
@@ -235,12 +237,12 @@
 <!-- 主界面弹窗 -->
 <div id="overlay" class="modal-bg">
   <div class="panel">
-    <div class="title" id="modal-title">苍穹星核 · 移动清爽终极版</div>
-    <div class="subtitle" id="modal-sub">已实装手机清爽 UI 布局、升级经验翻倍（25万封顶）与硬核首领！</div>
+    <div class="title" id="modal-title">苍穹星核 · 终极耐玩触控版</div>
+    <div class="subtitle" id="modal-sub">已实装右侧拇指悬浮圆钮、防误触隔离与超长发育周期！</div>
     <div class="rules">
-      <div>📱 <b>移动端清爽 UI</b>：全面瘦身状态框，AI 副官移至底部，彻底告别手机小屏重叠挤压！</div>
-      <div>📈 <b>硬核翻倍经验曲线</b>：初始升级需 1,000 分，每升一级严格翻一倍，最高 250,000 分封顶！</div>
-      <div>⚔️ <b>三大史诗首领强化</b>：首领血量 18,000 ~ 38,000，高密度环形弹幕压迫感拉满！</div>
+      <div>🕹️ <b>右侧拇指圆钮 + 触控隔离</b>：技能移至右侧竖排，点技能绝不牵引战机乱飞，支持双手丝滑同操！</div>
+      <div>🌌 <b>超长发育耐玩战线</b>：三大首领分别在 <b>4.5万 / 26万 / 75万分</b> 降临，给足时间刷满神装与共鸣！</div>
+      <div>📈 <b>硬核翻倍经验曲线</b>：初始升级需 1,000 分，每升一级翻倍，单级最高 250,000 分封顶！</div>
       <div>🌟 <b>天基歼星主炮 + 黑市商船</b>：连击满 x16 轰出全屏螺旋死光，星海偶遇黑市商船！</div>
     </div>
     <div class="btn-row">
@@ -732,7 +734,7 @@
   var endlessMode = false;
   var isBossRushMode = false;
   var bossRushFrames = 0;
-  var nextEndlessBossScore = 110000;
+  var nextEndlessBossScore = 1100000;
   var score = 0;
   var grazeCountThisRun = 0;
 
@@ -742,7 +744,7 @@
   var nextUpgradeScore = 1000;
 
   var currentBoss = null;
-  var bossStages = [25000, 50000, 80000];
+  var bossStages = [45000, 260000, 750000];
   var currentBossIndex = 0;
 
   var screenShake = 0;
@@ -825,7 +827,7 @@
 
   window.triggerRailgun = function() {
     if (!running || pausedForUpgrade || pausedByPlayer || combo < 16) {
-      if (running && combo < 16) addFloatText(player.x, player.y - 28, '⚠️ 连击达到 x16 即可发射天基歼星炮！', '#ff007a');
+      if (running && combo < 16) addFloatText(player.x, player.y - 28, '⚠️ 连击满 x16 即可发射天基歼星炮！', '#ff007a');
       return;
     }
     combo = Math.max(1, combo - 8);
@@ -889,7 +891,7 @@
 
   window.enterEndlessMode = function() {
     endlessMode = true;
-    nextEndlessBossScore = Math.floor(score / 10000) * 10000 + 30000;
+    nextEndlessBossScore = Math.floor(score / 10000) * 10000 + 350000;
     victoryModal.classList.add('hidden');
     pausedForUpgrade = false;
     player.invincible = 120;
@@ -930,7 +932,7 @@
       '<div>✈️ <b>出击座驾</b>：<span style="color:#00f0ff;">' + SHIP_SKINS[saveData.selectedSkin || 0].name + '</span></div>' +
       (isBossRushMode ? '<div>⏱️ <b>Boss Rush 通关用时</b>：<b style="color:#e879f9;">' + rushSec + ' 秒</b> (最快纪录: ' + (saveData.bestRushTime || rushSec) + '秒)</div>' : '') +
       '<div>📊 <b>远征战绩</b>：<b style="color:#00ff9d;">' + Math.floor(score) + '</b> 分 (战机等级 Lv.' + playerLevel + ')</div>' +
-      '<div>🌌 <b>无尽深渊说明</b>：点击下方【驶入无尽深渊】可继续本局神装存档，每推进 30,000 分降临强化轮回首领！</div>';
+      '<div>🌌 <b>无尽深渊说明</b>：点击下方【驶入无尽深渊】可继续本局神装存档，每推进 350,000 分降临强化轮回首领！</div>';
     victoryModal.classList.remove('hidden');
   }
 
@@ -954,8 +956,8 @@
     isBossRushMode = false;
     bossRushFrames = 0;
     rushTimerEl.style.display = 'none';
-    nextEndlessBossScore = 110000;
-    bossStages = [25000, 50000, 80000];
+    nextEndlessBossScore = 1100000;
+    bossStages = [45000, 260000, 750000];
     bossHud.style.display = 'none';
     bossWarningBanner = 0;
     screenShake = 0;
@@ -1020,7 +1022,7 @@
     updateUI();
     running = true;
     playSound('coin');
-    triggerAIComm(SHIP_SKINS[skinId].name + ' 已升空，连击满 x16 可发射天基歼星炮！');
+    triggerAIComm(SHIP_SKINS[skinId].name + ' 已升空，右侧悬浮按钮可直接释放技能！');
   };
 
   window.startBossRush = function() {
@@ -1047,14 +1049,28 @@
     overlay.classList.remove('hidden');
   }
 
+  // ============================================================================
+  // 触控与鼠标事件彻底隔离：点技能按钮绝不牵引战机乱飞
+  // ============================================================================
+  ['bottom-bar', 'hud'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    ['touchstart', 'touchmove', 'touchend', 'mousedown'].forEach(function(ev) {
+      el.addEventListener(ev, function(e) { e.stopPropagation(); }, { passive: true });
+    });
+  });
+
   var updateTarget = function(x, y, isTouch) {
     if (!running || pausedForUpgrade || pausedByPlayer) return;
     player.targetX = x;
     player.targetY = isTouch ? Math.max(player.r, y - 45) : y;
   };
-  window.addEventListener('mousemove', function(e) { updateTarget(e.clientX, e.clientY, false); });
-  window.addEventListener('touchmove', function(e) {
-    if (e.touches && e.touches.length > 0) updateTarget(e.touches[0].clientX, e.touches[0].clientY, true);
+
+  canvas.addEventListener('mousemove', function(e) { updateTarget(e.clientX, e.clientY, false); });
+  canvas.addEventListener('touchmove', function(e) {
+    if (e.targetTouches && e.targetTouches.length > 0) {
+      updateTarget(e.targetTouches[0].clientX, e.targetTouches[0].clientY, true);
+    }
   }, { passive: true });
 
   var lastTap = 0;
@@ -1066,13 +1082,15 @@
     lastTap = now;
   };
 
-  window.addEventListener('mousedown', function(e) {
+  canvas.addEventListener('mousedown', function(e) {
     if (e.button === 2) { e.preventDefault(); window.triggerDash(); return; }
     handleTap(e.clientX, e.clientY, false);
   });
   window.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-  window.addEventListener('touchstart', function(e) {
-    if (e.touches && e.touches.length > 0) handleTap(e.touches[0].clientX, e.touches[0].clientY, true);
+  canvas.addEventListener('touchstart', function(e) {
+    if (e.targetTouches && e.targetTouches.length > 0) {
+      handleTap(e.targetTouches[0].clientX, e.targetTouches[0].clientY, true);
+    }
   }, { passive: true });
 
   window.addEventListener('keydown', function(e) {
@@ -1160,7 +1178,6 @@
     var prevSyn1 = hasTwinBeamSynergy(), prevSyn2 = hasStormWebSynergy(), prevSyn3 = hasZeroTimeSynergy();
     playerLevel++;
     prevUpgradeScore = nextUpgradeScore;
-    // 每升一级经验翻一倍（1000 -> 2000 -> 4000 -> 8000...），封顶 250,000
     upgradeStepCost = Math.min(250000, Math.round(1000 * Math.pow(2, playerLevel - 1)));
     nextUpgradeScore = prevUpgradeScore + upgradeStepCost;
 
@@ -1258,7 +1275,7 @@
     bossWarningText = bannerTitles[bossType];
 
     var aiBossTips = [
-      '高能反应！首领【深渊之眼】降临，可使用⚡量子闪现直接穿越它的死光束！',
+      '高能反应！首领【深渊之眼】降临，可使用右侧⚡闪现直接穿越死光束！',
       '星系级威胁【超新星歼灭者】降临，迅速驶离地面紫色超新星引爆圈！',
       '星域级首领【虚空吞噬者】降临，小心战场中央的黑洞引力拉扯！'
     ];
@@ -1384,7 +1401,7 @@
     } else {
       player.hp--; updateHeartsDisplay(); player.invincible = 115; combo = 1; playSound('hit');
       addFloatText(player.x, player.y - 26, '❤️ 生命 -1 (' + reasonText + ')', '#ff0055');
-      if (player.hp === 1) triggerAIComm('警告！逐光者装甲濒临解体，请善用⚡量子闪现规避致命弹幕！');
+      if (player.hp === 1) triggerAIComm('警告！逐光者装甲濒临解体，请善用右侧⚡闪现规避致命弹幕！');
       updateUI();
       if (player.hp <= 0) gameOver();
     }
@@ -1403,21 +1420,21 @@
     var neededEmp = getEmpCost();
     empFillEl.style.width = empCharge + '%';
     if (empCharge >= neededEmp) {
-      empBtn.textContent = '💥 脉冲(就绪)'; empBtn.className = 'ready';
+      empBtn.innerHTML = '💥脉冲<br>就绪'; empBtn.className = 'ready';
     } else {
-      empBtn.textContent = '💥 脉冲(' + Math.floor(empCharge) + '%)'; empBtn.className = '';
+      empBtn.innerHTML = '💥脉冲<br>' + Math.floor(empCharge) + '%'; empBtn.className = '';
     }
 
     if (player.dashCooldown <= 0) {
-      dashBtn.textContent = '⚡ 闪现(就绪)'; dashBtn.className = 'ready';
+      dashBtn.innerHTML = '⚡闪现<br>就绪'; dashBtn.className = 'ready';
     } else {
-      dashBtn.textContent = '⚡ 闪现(' + (player.dashCooldown / 60).toFixed(1) + 's)'; dashBtn.className = '';
+      dashBtn.innerHTML = '⚡闪现<br>' + (player.dashCooldown / 60).toFixed(1) + 's'; dashBtn.className = '';
     }
 
     if (combo >= 16) {
-      railgunBtn.textContent = '🌟 歼星炮(就绪)'; railgunBtn.className = 'ready';
+      railgunBtn.innerHTML = '🌟歼星<br>就绪'; railgunBtn.className = 'ready';
     } else {
-      railgunBtn.textContent = '🌟 歼星炮(' + combo + '/16)'; railgunBtn.className = '';
+      railgunBtn.innerHTML = '🌟歼星<br>' + combo + '/16'; railgunBtn.className = '';
     }
   }
 
@@ -1435,11 +1452,11 @@
     }
 
     var currentNebulaGrad = ctx.createRadialGradient(W * 0.5, H * 0.3, 50, W * 0.5, H * 0.5, Math.max(W, H));
-    if (score >= 50000) {
+    if (score >= 260000) {
       currentNebulaGrad.addColorStop(0, warpTimer > 0 ? '#3b0764' : '#1e1b4b');
       currentNebulaGrad.addColorStop(0.6, '#0f0c1b');
       currentNebulaGrad.addColorStop(1, '#020308');
-    } else if (score >= 25000) {
+    } else if (score >= 45000) {
       currentNebulaGrad.addColorStop(0, warpTimer > 0 ? '#450a0a' : '#2b090e');
       currentNebulaGrad.addColorStop(0.6, '#0a0508');
       currentNebulaGrad.addColorStop(1, '#020308');
@@ -1522,7 +1539,7 @@
       if (!endlessMode && currentBossIndex < bossStages.length && score >= bossStages[currentBossIndex] && !currentBoss && !pausedForUpgrade) {
         spawnBoss();
       } else if (endlessMode && score >= nextEndlessBossScore && !currentBoss) {
-        nextEndlessBossScore += 30000;
+        nextEndlessBossScore += 350000;
         spawnBoss();
       }
 
